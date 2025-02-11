@@ -61,10 +61,10 @@ export default async (monitor = 0) => {
                     overlays: [
                         Widget.Box({ hexpand: true }),
                         Widget.Box({
-                            className: 'short-me bar-sidemodule', hexpand: true,
+                            className: 'bar-sidemodule', hexpand: true,
                             children: [Widget.Box({
                                 vertical: true,
-                                className: 'bar-space-button',
+                                className: 'short-me bar-space-button',
                                 children: [
                                     optionalWindowTitleInstance,
                                 ]

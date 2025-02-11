@@ -202,7 +202,7 @@ const BatteryModule = () => Stack({
         }),
         'desktop': BarGroup({
             child: Box({
-                hexpand: true,
+                //hexpand: true,
                 hpack: 'center',
                 className: 'spacing-h-4 txt-onSurfaceVariant',
                 children: [

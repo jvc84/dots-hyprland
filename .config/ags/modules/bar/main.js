@@ -48,7 +48,7 @@ export const Bar = async (monitor = 0) => {
         },
         startWidget: (await WindowTitle(monitor)),
         centerWidget: Widget.Box({
-            className: 'spacing-h-4',
+            className: 'bar-center-modules spacing-h-4',
             children: [
                 SideModule([Music()]),
                 Widget.Box({
