@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
 
-track_path=$(cmus-remote -Q | grep file | head -n1 | awk -F 'file ' '{print $2}')
-track_basename=$(basename "$track_path")
+XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
+CMUS_CACHE_DIR="$XDG_CACHE_HOME/cmus_ags"
+AGS_MEDIA_CACHE_DIR="$XDG_CACHE_HOME/ags/media"
 
-cmus_cache="$HOME/.cache/cmus_ags"
-media_cache="$HOME/.cache/ags/media"
+track_path="$(cmus-remote -Q | grep file | head -n1 | awk -F 'file ' '{print $2}')"
+track_basename="$(basename "$track_path")"
 
-img_path="$cmus_cache/$track_basename.png"
-hash=$(echo -n "$track_path" | sha1sum | awk '{print $1}'); hash_path="$media_cache/$hash" || hash_path=""
+img_path="$CMUS_CACHE_DIR/$track_basename.png"
+hash="$(echo -n "$track_path" | sha1sum | awk '{print $1}')"; hash_path="$AGS_MEDIA_CACHE_DIR/$hash" || hash_path=""
 
-mkdir -p "$cmus_cache"
-mkdir -p "$media_cache"
+mkdir -p "$CMUS_CACHE_DIR"
+mkdir -p "$AGS_MEDIA_CACHE_DIR"
 
-if [[ -z "$( find "$cmus_cache" -name "coverpath.txt" )" ]]; then
-    touch "$cmus_cache/coverpath.txt"
+if [[ -z "$( find "$CMUS_CACHE_DIR" -name "coverpath.txt" )" ]]; then
+    touch "$CMUS_CACHE_DIR/coverpath.txt"
 fi
 
-if [[ -z "$(find "$media_cache" -name "$hash" )" ]]; then
-    ffmpeg -ss 0:00 "$img_path" -i "$track_path" && mv "$img_path" "$hash_path" || hash_path=""
+if [[ -z "$(find "$AGS_MEDIA_CACHE_DIR" -name "$hash" )" ]]; then
+    ffmpeg -ss 0:00 "$img_path" -i "$track_path"; mv "$img_path" "$hash_path" || hash_path=""
 fi
 
-echo "$hash_path" > "$cmus_cache/coverpath.txt"
+echo "$hash_path" > "$CMUS_CACHE_DIR/coverpath.txt"
 
