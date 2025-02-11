@@ -8,6 +8,22 @@ $bar_ws_width_focus_active: 2.045rem;
     @include small-rounding;
 }
 
+//////////////
+
+
+.bar-center-modules {
+    min-width: 85rem;
+}
+
+.short-me {
+    margin-right: 7rem;
+}
+
+.my-spacing>*:last-child {
+    margin-right: 0.182rem;
+}
+
+//////////
 .bar-height {
     min-height: 2.727rem;
 }

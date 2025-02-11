@@ -18,6 +18,25 @@ const lightDark = (colorMode == "light") ? 'light' : '';
 const COVER_COLORSCHEME_SUFFIX = '_colorscheme.css';
 var lastCoverPath = '';
 
+
+function getCover(player) {
+    if (player.name == "cmus") {
+	try {
+            exec(
+                ['bash', '-c', `${App.configDir}/scripts/cmus_cover/get_cmus_cover.sh`]
+            )
+            const contents = Utils.readFile(`${GLib.get_user_cache_dir()}/cmus_ags/coverpath.txt`);
+            return contents.replace('\n', '')
+        } catch {
+	    return ''
+	}
+    }
+    else {
+//        print("NOMUS");
+	return player.coverPath
+    }
+}
+
 function isRealPlayer(player) {
     return (
         // Remove unecessary native buses from browsers if there's plasma integration
@@ -180,21 +199,21 @@ const CoverArt = ({ player, ...rest }) => {
                 // const player = Mpris.getPlayer(); // Maybe no need to re-get player.. can't remember why I had this
                 // Player closed
                 // Note that cover path still remains, so we're checking title
-                if (!player || player.trackTitle == "" || !player.coverPath) {
+                if (!player || player.trackTitle == "" || !getCover(player)) {
                     self.css = `background-image: none;`; // CSS image
                     App.applyCss(`${COMPILED_STYLE_DIR}/style.css`);
                     return;
                 }
 
-                const coverPath = player.coverPath;
-                const stylePath = `${player.coverPath}${darkMode.value ? '' : '-l'}${COVER_COLORSCHEME_SUFFIX}`;
-                if (player.coverPath == lastCoverPath) { // Since 'notify::cover-path' emits on cover download complete
+                const coverPath = getCover(player);
+                const stylePath = `${getCover(player)}${darkMode.value ? '' : '-l'}${COVER_COLORSCHEME_SUFFIX}`;
+                if (getCover(player) == lastCoverPath) { // Since 'notify::cover-path' emits on cover download complete
                     Utils.timeout(200, () => {
                         // self.attribute.showImage(self, coverPath);
                         self.css = `background-image: url('${coverPath}');`; // CSS image
                     });
                 }
-                lastCoverPath = player.coverPath;
+                lastCoverPath = getCover(player);
 
                 // If a colorscheme has already been generated, skip generation
                 if (fileExists(stylePath)) {
@@ -208,7 +227,7 @@ const CoverArt = ({ player, ...rest }) => {
                 execAsync(['bash', '-c',
                     `${App.configDir}/scripts/color_generation/generate_colors_material.py --path '${coverPath}' --mode ${darkMode.value ? 'dark' : 'light'} > ${GLib.get_user_state_dir()}/ags/scss/_musicmaterial.scss`])
                     .then(() => {
-                        exec(`${App.configDir}/scripts/color_generation/pywal.sh -i "${player.coverPath}" -n -t -s -e -q ${darkMode.value ? '' : '-l'}`)
+                        exec(`${App.configDir}/scripts/color_generation/pywal.sh -i "${getCover(player)}" -n -t -s -e -q ${darkMode.value ? '' : '-l'}`)
                         exec(`cp ${GLib.get_user_cache_dir()}/wal/colors.scss ${GLib.get_user_state_dir()}/ags/scss/_musicwal.scss`);
                         exec(`sass -I "${GLib.get_user_state_dir()}/ags/scss" -I "${App.configDir}/scss/fallback" "${App.configDir}/scss/_music.scss" "${stylePath}"`);
                         Utils.timeout(200, () => {
@@ -223,7 +242,9 @@ const CoverArt = ({ player, ...rest }) => {
         setup: (self) => self
             .hook(player, (self) => {
                 self.attribute.updateCover(self);
-            }, 'notify::cover-path')
+            }, 
+	//	'notify::cover-path'
+	    )
         ,
     });
     return Box({

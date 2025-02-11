@@ -41,6 +41,17 @@ const QUICK_TOGGLES = {
 
 const centerWidgets = [
     {
+        name: getString('Wifi networks'),
+        materialIcon: 'wifi',
+        contentWidget: ModuleWifiNetworks,
+        onFocus: () => execAsync('nmcli dev wifi list').catch(print),
+    },
+    {
+	name: getString('Bluetooth'),
+        materialIcon: 'bluetooth',
+        contentWidget: ModuleBluetooth,
+    },
+    {
         name: getString('Notifications'),
         materialIcon: 'notifications',
         contentWidget: ModuleNotificationList,
@@ -49,17 +60,6 @@ const centerWidgets = [
         name: getString('Audio controls'),
         materialIcon: 'volume_up',
         contentWidget: ModuleAudioControls,
-    },
-    {
-        name: getString('Bluetooth'),
-        materialIcon: 'bluetooth',
-        contentWidget: ModuleBluetooth,
-    },
-    {
-        name: getString('Wifi networks'),
-        materialIcon: 'wifi',
-        contentWidget: ModuleWifiNetworks,
-        onFocus: () => execAsync('nmcli dev wifi list').catch(print),
     },
     {
         name: getString('Live config'),

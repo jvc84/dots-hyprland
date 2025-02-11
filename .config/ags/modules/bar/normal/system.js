@@ -92,9 +92,60 @@ const Utilities = () => Box({
     ]
 })
 
+const BarResource = (name, icon, command, circprogClassName = 'bar-batt-circprog', textClassName = 'txt-onSurfaceVariant', iconClassName = 'bar-batt') => {
+    const resourceCircProg = AnimatedCircProg({
+        className: `${circprogClassName}`,
+        vpack: 'center',
+        hpack: 'center',
+    });
+    const resourceProgress = Box({
+        homogeneous: true,
+	className: 'padding-right-5',
+        children: [Overlay({
+            child: Box({
+                vpack: 'center',
+                className: `${iconClassName}`,
+                homogeneous: true,
+                children: [
+                    MaterialIcon(icon, 'small'),
+                ],
+            }),
+            overlays: [resourceCircProg]
+        })]
+    });
+    const resourceLabel = Label({
+        className: `txt-smallie ${textClassName}`,
+    });
+    const widget = Button({
+        onClicked: () => Utils.execAsync(['bash', '-c', `${userOptions.apps.taskManager}`]).catch(print),
+        child: Box({
+            className: `spacing-h-4 ${textClassName}`,
+            children: [
+                resourceLabel,
+                resourceProgress,
+            ],
+            setup: (self) => self.poll(5000, () => execAsync(['bash', '-c', command])
+                .then((output) => {
+                    resourceCircProg.css = `font-size: ${Number(output)}px;`;
+                    resourceLabel.label = `${Math.round(Number(output))}%`;
+                    widget.tooltipText = `${name}: ${Math.round(Number(output))}%`;
+                }).catch(print))
+            ,
+        })
+    });
+    return widget;
+}
+
 const BarBattery = () => Box({
     className: 'spacing-h-4 bar-batt-txt',
     children: [
+	BarResource(
+            'Storage Usage', 'storage',
+            `df   | grep -w /  | awk '{print $5 }' | cut -f1 -d '%'`,
+            'bar-cpu-circprog',
+            'bar-cpu-txt',
+            'bar-cpu-icon'
+        ),
         Revealer({
             transitionDuration: userOptions.animations.durationSmall,
             revealChild: false,
