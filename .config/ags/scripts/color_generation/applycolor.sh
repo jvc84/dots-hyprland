@@ -19,9 +19,9 @@ colorstrings=''
 colorlist=()
 colorvalues=()
 
-# wallpath=$(swww query | head -1 | awk -F 'image: ' '{print $2}')
-# wallpath_png="$CACHE_DIR/user/generated/hypr/lockscreen.png"
-# convert "$wallpath" "$wallpath_png"
+wallpath=$(swww query | head -1 | awk -F 'image: ' '{print $2}')
+wallpath_png="$CACHE_DIR/user/generated/hypr/lockscreen.png"
+magick "$wallpath" "$wallpath_png"
 # wallpath_png=$(echo "$wallpath_png" | sed 's/\//\\\//g')
 # wallpath_png=$(sed 's/\//\\\\\//g' <<< "$wallpath_png")
 
@@ -114,7 +114,7 @@ apply_hyprlock() {
   mkdir -p "$CACHE_DIR"/user/generated/hypr/
   cp "scripts/templates/hypr/hyprlock.conf" "$CACHE_DIR"/user/generated/hypr/hyprlock.conf
   # Apply colors
-  # sed -i "s/{{ SWWW_WALL }}/${wallpath_png}/g" "$CACHE_DIR"/user/generated/hypr/hyprlock.conf
+  sed -i "s|path = \$path|path = $wallpath_png|" "$CACHE_DIR"/user/generated/hypr/hyprlock.conf
   for i in "${!colorlist[@]}"; do
     sed -i "s/{{ ${colorlist[$i]} }}/${colorvalues[$i]#\#}/g" "$CACHE_DIR"/user/generated/hypr/hyprlock.conf
   done
@@ -164,8 +164,17 @@ apply_gtk() { # Using gradience-cli
 }
 
 apply_ags() {
-  agsv1 run-js "handleStyles(false);"
-  agsv1 run-js 'openColorScheme.value = true; Utils.timeout(2000, () => openColorScheme.value = false);'
+  ags run-js "handleStyles(false);"
+  ags run-js 'openColorScheme.value = true; Utils.timeout(2000, () => openColorScheme.value = false);'
+}
+
+apply_pywal() {
+  # generate pywal colors
+  mkdir -p "$CACHE_DIR"/user/generated/pywal
+  python "$CONFIG_DIR/scripts/color_generation/gen_materialwal.py"      # generate wal colors
+  wal -n -f "$CACHE_DIR/user/generated/pywal/pywal.json" -s -t --cols16 # apply pywal
+  # apply other scripts
+  sh "$XDG_CONFIG_HOME/pywal/gen-pywal"
 }
 
 apply_qt() {
@@ -173,8 +182,44 @@ apply_qt() {
   python "$CONFIG_DIR/scripts/kvantum/changeAdwColors.py" # apply config colors
 }
 
-colornames=$(cat $STATE_DIR/scss/_material.scss | cut -d: -f1)
-colorstrings=$(cat $STATE_DIR/scss/_material.scss | cut -d: -f2 | cut -d ' ' -f2 | cut -d ";" -f1)
+apply_folderColor() {
+  sh "$CONFIG_DIR/scripts/color_generation/changeFolder_color.sh"
+}
+
+apply_rofi() {
+  # Check if scripts/templates/rofi/style.rasi exists
+  if [ ! -f "scripts/templates/rofi/style.rasi" ]; then
+    echo "Template file not found for rofi colors. Skipping that."
+    return
+  fi
+  # Copy template
+  mkdir -p "$CACHE_DIR"/user/generated/rofi/
+  cp "scripts/templates/rofi/style.rasi" "$CACHE_DIR"/user/generated/rofi/style.rasi
+  # Apply colors
+  for i in "${!colorlist[@]}"; do
+    sed -i "s/{{ ${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR"/user/generated/rofi/style.rasi
+  done
+
+  cp "$CACHE_DIR"/user/generated/rofi/style.rasi "$XDG_CONFIG_HOME"/rofi/style.rasi
+
+  # Chnage rofi games templete colors
+  # Check if scripts/templates/rofi/colors.rasi exists
+  if [ ! -f "scripts/templates/rofi/colors.rasi" ]; then
+    echo "Template file not found for rofi colors. Skipping that."
+    return
+  fi
+  # Copy template
+  cp "scripts/templates/rofi/colors.rasi" "$CACHE_DIR"/user/generated/rofi/colors.rasi
+  # Apply colors
+  for i in "${!colorlist[@]}"; do
+    sed -i "s/{{ ${colorlist[$i]} }}/${colorvalues[$i]}/g" "$CACHE_DIR"/user/generated/rofi/colors.rasi
+  done
+
+  cp "$CACHE_DIR"/user/generated/rofi/colors.rasi "$XDG_CONFIG_HOME"/rofi/colors.rasi
+}
+
+colornames=$(cat "$STATE_DIR"/scss/_material.scss | cut -d: -f1)
+colorstrings=$(cat "$STATE_DIR"/scss/_material.scss | cut -d: -f2 | cut -d ' ' -f2 | cut -d ";" -f1)
 IFS=$'\n'
 colorlist=($colornames)     # Array of color names
 colorvalues=($colorstrings) # Array of color values
@@ -185,5 +230,8 @@ apply_hyprlock &
 apply_lightdark &
 apply_gtk &
 apply_qt &
+apply_pywal &
 apply_fuzzel &
 apply_term &
+apply_folderColor &
+apply_rofi &

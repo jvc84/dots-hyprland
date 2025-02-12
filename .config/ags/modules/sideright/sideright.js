@@ -13,8 +13,8 @@ import {
     ModuleSettingsIcon,
     ModulePowerIcon,
     ModuleRawInput,
-    ModuleGameMode,
-    ModuleCloudflareWarp
+    ModuleCloudflareWarp,
+    ModuleGameMode
 } from "./quicktoggles.js";
 import ModuleNotificationList from "./centermodules/notificationlist.js";
 import ModuleAudioControls from "./centermodules/audiocontrols.js";
@@ -26,6 +26,7 @@ import { getDistroIcon } from '../.miscutils/system.js';
 import { MaterialIcon } from '../.commonwidgets/materialicon.js';
 import { ExpandingIconTabContainer } from '../.commonwidgets/tabcontainer.js';
 import { checkKeybind } from '../.widgetutils/keybind.js';
+import { powerModule } from './powerprofile.js';
 
 const QUICK_TOGGLES = {
     'wifi': ToggleIconWifi(),
@@ -123,7 +124,7 @@ const timeRow = Box({
         }),
         Widget.Box({ hexpand: true }),
         ModuleReloadIcon({ hpack: 'end' }),
-        // ModuleSettingsIcon({ hpack: 'end' }), // Button does work, gnome-control-center is kinda broken
+        ModuleSettingsIcon({ hpack: 'end' }), // Button does work, gnome-control-center is kinda broken
         ModulePowerIcon({ hpack: 'end' }),
     ]
 });
@@ -175,7 +176,8 @@ export default () => Box({
                         sidebarOptionsStack,
                     ],
                 }),
-                ModuleCalendar(),
+                powerModule,
+                ModuleCalendar()
             ]
         }),
     ],
