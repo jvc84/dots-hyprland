@@ -99,8 +99,8 @@ async function createPowerBox() {
                     hpack: 'center',
                     className: 'spacing-h-5',
                     children: [
-                        await BalancedProfile(),
                         await PowerSaveProfile(),
+			await BalancedProfile(),
                         await PerformanceProfile(),
                     ],
                 }),
