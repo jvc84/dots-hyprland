@@ -1,5 +1,6 @@
 #!/usr/bin/env -S\_/bin/sh\_-xc\_"source\_\$(eval\_echo\_\$ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate&&exec\_python\_-E\_"\$0"\_"\$@""
 
+
 from time import sleep
 import sys
 import psutil
@@ -27,7 +28,7 @@ match direction:
         sys.exit()
 
 i = 0
-divider = 1024
+divider = 1000
 bandwidth = int((final_bytes - init_bytes))
 units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"]
 

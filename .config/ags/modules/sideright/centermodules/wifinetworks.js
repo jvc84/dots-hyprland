@@ -59,24 +59,24 @@ const WifiNetwork = (accessPoint) => {
 
 const NetResource = (icon, command) => {
     const resourceLabel = Label({
-       className: `txt-smaller txt-subtext`,
-   });
-   const widget = Button({
-       child: Box({
-           hpack: 'start',
-	   className: `spacing-h-4`,
-           children: [
-   	MaterialIcon(icon, 'very-small'),
-               resourceLabel,
-           ],
-           setup: (self) => self.poll(2000, () => execAsync(['bash', '-c', command])
-               .then((output) => {
-                   resourceLabel.label = output;
-               }).catch(print))
-           ,
-       })
-   });
-   return widget;
+        className: `txt-smaller txt-subtext`,
+    });
+    const widget = Button({
+        child: Box({
+            hpack: 'start',
+            className: `spacing-h-4`,
+            children: [
+                MaterialIcon(icon, 'very-small'),
+                resourceLabel,
+            ],
+            setup: (self) => self.poll(2000, () => execAsync(['bash', '-c', command])
+                .then((output) => {
+                    resourceLabel.label = output;
+                }).catch(print))
+            ,
+        })
+    });
+    return widget;
 }
 
 const CurrentNetwork = () => {
@@ -105,14 +105,14 @@ const CurrentNetwork = () => {
         ]
     });
     const networkBandwidth = Box({
-         vertical: true,
+        vertical: true,
         hexpand: true,
         hpack: 'center',
-        className: 'network-bandwidth',
-            children: [
-               NetResource('arrow_warm_up'  , `${App.configDir}/scripts/network_scripts/network_bandwidth.py sent`),
-               NetResource('arrow_cool_down', `${App.configDir}/scripts/network_scripts/network_bandwidth.py recv`),
-            ]
+        className: 'sidebar-wifinetworks-bandwidth',
+        children: [
+            NetResource('arrow_warm_up', `${App.configDir}/scripts/network_scripts/network_bandwidth.py sent`),
+            NetResource('arrow_cool_down', `${App.configDir}/scripts/network_scripts/network_bandwidth.py recv`),
+        ]
     });
     const networkStatus = Box({
         children: [Label({
@@ -168,8 +168,7 @@ const CurrentNetwork = () => {
                         className: 'spacing-h-10',
                         children: [
                             MaterialIcon('language', 'hugerass'),
-                            networkName,
-			    networkBandwidth,
+                            networkBandwidth,
                             networkStatus,
 
                         ]
