@@ -168,7 +168,8 @@ const CurrentNetwork = () => {
                         className: 'spacing-h-10',
                         children: [
                             MaterialIcon('language', 'hugerass'),
-                            networkBandwidth,
+                            networkName,
+			    networkBandwidth,
                             networkStatus,
 
                         ]
