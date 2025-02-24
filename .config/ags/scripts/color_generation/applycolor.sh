@@ -79,12 +79,61 @@ apply_term() {
   done
 
   sed -i "s/\$alpha/$term_alpha/g" "$CACHE_DIR/user/generated/terminal/sequences.txt"
-
+  
   for file in /dev/pts/*; do
     if [[ $file =~ ^/dev/pts/[0-9]+$ ]]; then
       cat "$CACHE_DIR"/user/generated/terminal/sequences.txt >"$file"
     fi
   done
+
+
+  #### Kitty
+  KITTY_CONF_DIR="$HOME/.config/kitty"
+  KITTY_SEQ="$KITTY_CONF_DIR/sequences.txt"
+  KITTY_COLOR_FILE="$KITTY_CONF_DIR/ags-colors.conf"
+  
+  mkdir "$KITTY_CONF_DIR"
+  touch "$KITTY_COLOR_FILE"
+	
+  cp "$KITTY_CONF_DIR/sequences.txt" "$KITTY_COLOR_FILE" 
+  
+  for i in "${!colorlist[@]}"; do
+    sed -i "s/${colorlist[$i]} #/${colorvalues[$i]#\#}/g" "$KITTY_COLOR_FILE"
+  done
+
+
+  echo "$term_alpha"
+  sed -i "s/#\$alpha #/$term_alpha/g" "$KITTY_COLOR_FILE"
+
+
+  #cat "$CACHE_DIR/user/generated/terminal/sequences.txt"  | sed  "s/]4;/color/g"  > "$KITTY_COLOR_FILE" 
+
+
+  #awk '{gsub(/\]/, "\ncolor")}1' $HOME/.cache/ags/user/generated/terminal/sequences.txt  >  $HOME/.config/kitty/ags-colors.conf
+
+
+  ### Rofi
+  ROFI_COLOR_FILE="$HOME/.config/rofi/colors.rasi"
+  for i in "${!colorlist[@]}"; do
+    var_name="$(echo ${colorlist[$i]} | awk -F '$' '{print $2}' | sed 's/\([A-Z]\)/-\l\1/g')"
+    sed -i "s/$var_name:.*;/$var_name: ${colorvalues[$i]};/g" "$ROFI_COLOR_FILE"
+  done
+ 
+ 
+  if [[ "$secondline" == *"transparent"* ]]; then # Set for transparent background
+      ags_transparency=True
+      hypr_opacity=0.9
+      rofi_alpha=#00000090
+      rofi_alpha_element=#00000025
+  else #Opaque Stuff
+      ags_transparency=False
+      hypr_opacity=1
+      rofi_alpha="var(surface)"
+      rofi_alpha_element="var(surface-container-low)"
+  fi
+ 
+  sed -i "s/wbg:.*;/wbg:$rofi_alpha;/" ~/.config/rofi/config.rasi &
+  sed -i "s/element-bg:.*;/element-bg:$rofi_alpha_element;/" ~/.config/rofi/config.rasi 
 }
 
 apply_hyprland() {
@@ -101,7 +150,25 @@ apply_hyprland() {
     sed -i "s/{{ ${colorlist[$i]} }}/${colorvalues[$i]#\#}/g" "$CACHE_DIR"/user/generated/hypr/hyprland/colors.conf
   done
 
-  cp "$CACHE_DIR"/user/generated/hypr/hyprland/colors.conf "$XDG_CONFIG_HOME"/hypr/hyprland/colors.conf
+  # cp "$CACHE_DIR"/user/generated/hypr/hyprland/colors.conf "$XDG_CONFIG_HOME"/hypr/hyprland/colors.conf
+
+  ### Chlang
+
+  CHLANG_COLORS="$HOME/.scripts/chlang/colors.txt"
+
+  red=""
+  blue=""
+  
+  for i in "${!colorlist[@]}"; do
+     if [[ "${colorlist[$i]}" == "\$term9" ]];then
+	  red="red=${colorvalues[$i]}"
+     elif [[ "${colorlist[$i]}" == "\$term12" ]];then
+          blue="blue=${colorvalues[$i]}"
+     fi
+  done
+
+  touch "$CHLANG_COLORS"
+  echo -e "$blue\n$red" > "$CHLANG_COLORS"
 }
 
 apply_hyprlock() {
@@ -149,9 +216,9 @@ apply_gtk() { # Using gradience-cli
   done
 
   mkdir -p "$XDG_CONFIG_HOME/presets" # create gradience presets folder
-  source $(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate
+  #source "$(eval "$ILLOGICAL_IMPULSE_VIRTUAL_ENV/bin/activate")"
   gradience-cli apply -p "$CACHE_DIR"/user/generated/gradience/preset.json --gtk both
-  deactivate
+  #deactivate
 
   # And set GTK theme manually as Gradience defaults to light adw-gtk3
   # (which is unreadable when broken when you use dark mode)
@@ -166,6 +233,7 @@ apply_gtk() { # Using gradience-cli
 apply_ags() {
   agsv1 run-js "handleStyles(false);"
   agsv1 run-js 'openColorScheme.value = true; Utils.timeout(2000, () => openColorScheme.value = false);'
+  notify-send "AGS Applied"
 }
 
 apply_qt() {

@@ -76,6 +76,44 @@ function calculateSchemeInitIndex(optionsArr, searchValue = 'vibrant') {
     return [rowIndex, columnIndex];
 }
 
+const gowallArr = [
+    [
+        { name: getString('Catppuccin'), value: 'catppuccin' },
+        { name: getString('Nord'), value: 'nord' },
+        { name: getString('Dracula'), value: 'dracula' },
+        { name: getString('Tokyo'), value: 'tokyo-storm' },
+        { name: getString('Everforest'), value: 'everforest' },
+    ],
+    [
+        { name: getString('Gruvbox'), value: 'gruvbox' },
+        { name: getString('One Dark'), value: 'onedark' },
+        { name: getString('Solarized'), value: 'solarized' },
+        { name: getString('Cyber'), value: 'cyberpunk' },
+        { name: getString('Atom Dark'), value: 'atomdark' },
+    ],
+    // [
+    //     { name: getString('Atom One Light'), value: 'nord' },
+    //     { name: getString('Sweet'), value: 'everforest' },
+    //     { name: getString('Synthwave 84'), value: 'synthwave84' },
+    // ],
+    // [
+    //     { name: getString('Atom Dark'), value: 'gruvbox' },
+    //     { name: getString('Ocianic Next'), value: 'dracula' },
+    //     { name: getString('Shades of Purple'), value: 'tokyo-night' },
+    //     { name: getString('Arc Dark'), value: 'onedark' },
+    // ],
+    // [
+    //     { name: getString('Sunset Aurant'), value: 'catppuccin' },
+    //     { name: getString('Sunset Saffron'), value: 'nord' },
+    //     { name: getString('Sunset Tangerine'), value: 'everforest' },
+    // ],
+    // [
+    //     { name: getString('Night Owl'), value: 'gruvbox' },
+    //     { name: getString('Github Black'), value: 'dracula' },
+    //     { name: getString('Github White'), value: 'tokyo-night' },
+    // ],
+];
+
 const schemeOptionsArr = [
     [
         { name: getString('Tonal Spot'), value: 'tonalspot' },
@@ -102,6 +140,8 @@ const initTransparency = Utils.exec(`bash -c "sed -n \'2p\' ${LIGHTDARK_FILE_LOC
 const initTransparencyVal = (initTransparency == "transparent") ? 1 : 0;
 const initScheme = Utils.exec(`bash -c "sed -n \'3p\' ${LIGHTDARK_FILE_LOCATION}"`);
 const initSchemeIndex = calculateSchemeInitIndex(schemeOptionsArr, initScheme);
+const initGowall = Utils.exec(`bash -c "sed -n \'4p\' ${LIGHTDARK_FILE_LOCATION}"`);
+const initGowallIndex = calculateSchemeInitIndex(gowallArr, initGowall);
 
 const ColorSchemeSettings = () => Widget.Box({
     className: 'osd-colorscheme-settings spacing-v-5 margin-20',
@@ -138,9 +178,39 @@ const ColorSchemeSettings = () => Widget.Box({
                     onChange: (self, newValue) => {
                         let transparency = newValue == 0 ? "opaque" : "transparent";
                         execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_state_dir()}/ags/user && sed -i "2s/.*/${transparency}/"  ${GLib.get_user_state_dir()}/ags/user/colormode.txt`])
-                            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchcolor.sh`]))
+                            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/pharm-switchcolor.sh`]))
                             .catch(print);
                     },
+                }),
+		Widget.Box({
+                    tooltipText: getString('Theme Wallpaper for ColorPalette'),
+                    className: 'txt spacing-h-5 configtoggle-box',
+                    children: [
+                        MaterialIcon('imagesearch_roller', 'norm'),
+                        Widget.Label({
+                            className: 'txt txt-small',
+                            label: getString('GoWall'),
+                        }),
+                        Widget.Box({ hexpand: true }),
+                        ConfigMulipleSelection({
+                            hpack: 'center',
+                            vpack: 'center',
+                            optionsArr: [
+                                [{ name: 'Off', value: 0 }, { name: 'On', value: 1 }],
+                            ],
+                            initIndex: [-1, -1],
+                            onChange: (value, name) => {
+                                if (value === 0) {
+				    const gowall = "none";
+				    execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_state_dir()}/ags/user && sed -i "4s/.*/${gowall}/"  ${GLib.get_user_state_dir()}/ags/user/colormode.txt`]);
+                                    execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/pharm-switchwall.sh --switch &`]);
+
+				} else {
+                                    execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/pharm-switchwall.sh --restore &`]);
+				}   
+                            },
+                        }),
+                    ]
                 }),
                 Widget.Box({
                     tooltipText: getString('Theme GTK apps using accent color\n(drawback: dark/light mode switching requires restart)'),
@@ -161,9 +231,9 @@ const ColorSchemeSettings = () => Widget.Box({
                             initIndex: [-1, -1],
                             onChange: (value, name) => {
                                 const ADWAITA_BLUE = "#3584E4";
-                                if (value) execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/switchcolor.sh - --yes-gradience`, `&`])
+                                if (value) execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/pharm-switchcolor.sh - --yes-gradience`, `&`])
                                     .catch(print);
-                                else execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/switchcolor.sh "${ADWAITA_BLUE}" --no-gradience`, `&`])
+                                else execAsync([`bash`, `-c`, `${App.configDir}/scripts/color_generation/pharm-switchcolor.sh "${ADWAITA_BLUE}" --no-gradience`, `&`])
                                     .catch(print);
 
                             },
@@ -190,9 +260,29 @@ const ColorSchemeSettings = () => Widget.Box({
                     initIndex: initSchemeIndex,
                     onChange: (value, name) => {
                         execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_state_dir()}/ags/user && sed -i "3s/.*/${value}/" ${GLib.get_user_state_dir()}/ags/user/colormode.txt`])
-                            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchcolor.sh`]))
+                            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/pharm-switchcolor.sh`]))
                             .catch(print);
                     },
+                }),
+		Widget.Label({
+                    xalign: 0,
+                    className: 'txt-norm titlefont onSurfaceVariant',
+                    label: getString('Wallpaper Styles'),
+                    hpack: 'center',
+                }),
+                ConfigMulipleSelection({
+                    hpack: 'center',
+                    vpack: 'center',
+                    optionsArr: gowallArr,
+                    initIndex: initGowallIndex,
+                    onChange: (value, name) => {
+                        execAsync([`bash`, `-c`, `mkdir -p ${GLib.get_user_state_dir()}/ags/user && sed -i "4s/.*/${value}/" ${GLib.get_user_state_dir()}/ags/user/colormode.txt`])
+                            .then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/pharm-switchwall.sh --switch `]))
+                            //.then(execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/switchcolor.sh `]))
+			    .catch(print)
+                        //execAsync(['bash', '-c', `${App.configDir}/scripts/color_generation/applycolor.sh `])
+                    
+		    },
                 }),
             ]
         })
